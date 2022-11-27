@@ -146,4 +146,13 @@ def d_inv_right (x) (a: d_elem x): d_add x  a (d_inv x a)= ((false:bool), (0  : 
 end
 def dihedral (x: ℕ )  : Group := 
   ⟨d_elem x , d_add x,d_assoc x, (false, 0), d_add_left x,d_add_right x,d_inv x,d_inv_left x, d_inv_right x⟩  
+-- #print (dihedral 4)
+-- variables {n: ℕ}
+-- bijections from [n] → [n]
+def bijection (x : ℕ) : Type := {f: (fin x → (fin x)) // ∀(a b: fin x), a≠ b → f a ≠ f b}
 
+-- variables {b1 b2: bijection n}
+-- #check bijection
+def compose_bijection (x: ℕ ) (b1: bijection x) ( b2: bijection x): bijection x := sorry
+def symmetric_group (x: ℕ )  : Group :=
+⟨bijection x,sorry ,sorry,sorry,sorry,sorry,sorry,sorry,sorry ⟩  

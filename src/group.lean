@@ -126,24 +126,24 @@ def d_inv_left (x) (a: d_elem x): d_add x (d_inv x a) a = ((false:bool), (0  : z
   simp,
   rcases a with ⟨t | f, m⟩,
   any_goals {
-    -- cases b_fst,
     repeat {simp, ring_nf},
   },
   simp,{
-  -- ring,
-  -- simp,
-  -- apply zmod.val_eq_zero,
-  -- rw coe,
-  -- rw lift_t,
-  sorry,
+  simp,
   },
-  -- ring_nf,
-  -- repeat {simp, ring_nf},
-  -- cases a_fst,
-  -- simp,
-  -- sorry,
-  -- simp,
+end
+def d_inv_right (x) (a: d_elem x): d_add x  a (d_inv x a)= ((false:bool), (0  : zmod x)) := begin
+  rw d_inv,
+  rw d_add,
+  simp,
+  rcases a with ⟨t | f, m⟩,
+  any_goals {
+    repeat {simp, ring_nf},
+  },
+  simp,{
+  simp,
+  },
 end
 def dihedral (x: ℕ )  : Group := 
-  ⟨d_elem x , d_add x,d_assoc x, (false, 0), d_add_left x,d_add_right x,d_inv x,⟩  
+  ⟨d_elem x , d_add x,d_assoc x, (false, 0), d_add_left x,d_add_right x,d_inv x,d_inv_left x, d_inv_right x⟩  
 

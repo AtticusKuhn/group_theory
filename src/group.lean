@@ -121,38 +121,57 @@ def d_add_right (x): (∀ (a : d_elem x), d_add x a (false, 0) = a) := begin
 end
 def d_inv (x) (a  : d_elem x) :  d_elem x := ( a.1,  if a.1 then  a.2 else x - a.2)
 def d_inv_left (x) (a: d_elem x): d_add x (d_inv x a) a = ((false:bool), (0  : zmod x)) := begin
-  rw d_inv,
-  rw d_add,
+  rw [d_inv,d_add],
   simp,
   rcases a with ⟨t | f, m⟩,
-  any_goals {
-    repeat {simp, ring_nf},
-  },
-  simp,{
-  simp,
-  },
+  any_goals {repeat {simp},},
 end
 def d_inv_right (x) (a: d_elem x): d_add x  a (d_inv x a)= ((false:bool), (0  : zmod x)) := begin
-  rw d_inv,
-  rw d_add,
+  rw [d_inv,d_add],
   simp,
   rcases a with ⟨t | f, m⟩,
-  any_goals {
-    repeat {simp, ring_nf},
-  },
-  simp,{
-  simp,
-  },
+  any_goals {repeat {simp},},
 end
 def dihedral (x: ℕ )  : Group := 
   ⟨d_elem x , d_add x,d_assoc x, (false, 0), d_add_left x,d_add_right x,d_inv x,d_inv_left x, d_inv_right x⟩  
 -- #print (dihedral 4)
 -- variables {n: ℕ}
 -- bijections from [n] → [n]
-def bijection (x : ℕ) : Type := {f: (fin x → (fin x)) // ∀(a b: fin x), a≠ b → f a ≠ f b}
+def bijection (x : ℕ) : Type := {f: (fin x → (fin x)) // function.bijective  f}
 
 -- variables {b1 b2: bijection n}
 -- #check bijection
-def compose_bijection (x: ℕ ) (b1: bijection x) ( b2: bijection x): bijection x := sorry
+def compose_bijection (x: ℕ ) (b1: bijection x) ( b2: bijection x): bijection x := ⟨ b1.1 ∘ b2.1,function.bijective.comp b1.2 b2.2 ⟩ 
+def compose_assoc (x: ℕ ) :∀ (a b c : bijection x), compose_bijection x (compose_bijection x a b) c = compose_bijection x a (compose_bijection x b c) := begin
+  intros a b c,
+  repeat {rw compose_bijection},
+end
+def bij_identity (x: ℕ ): bijection x := ⟨id, function.bijective_id ⟩ 
+def id_left (x:ℕ ):∀ (a : bijection x), compose_bijection x (bij_identity x) a = a := begin
+  intro a,
+  rw compose_bijection,
+  rw bij_identity,
+  simp,
+end
+def id_right (x:ℕ ):∀ (a : bijection x), compose_bijection x a (bij_identity x) = a := begin
+  intro a,
+  rw compose_bijection,
+  rw bij_identity,
+  simp,
+end
+def bij_inv (x: ℕ ): bijection x → bijection x := sorry
 def symmetric_group (x: ℕ )  : Group :=
-⟨bijection x,sorry ,sorry,sorry,sorry,sorry,sorry,sorry,sorry ⟩  
+⟨bijection x,compose_bijection x ,compose_assoc x, bij_identity x ,id_left x ,id_right x,bij_inv x,sorry,sorry ⟩  
+
+
+def homomorphism (G: Group) (H:Group) (φ:G.T → H.T): Prop := ∀(x y : G.T), φ(G.f x y) = H.f (φ x) (φ y)
+
+def isomorphism (G: Group) (H:Group) (φ:G.T → H.T) : Prop := homomorphism G H φ ∧ function.bijective φ
+
+def homomorphic (G: Group) (H:Group) : Prop := ∃ (φ:G.T → H.T), homomorphism G H φ
+
+def D6_homo_to_S3: homomorphic (dihedral 6) (symmetric_group 3) := begin
+rw homomorphic,
+
+sorry,
+end

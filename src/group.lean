@@ -5,6 +5,8 @@ import tactic.nth_rewrite.basic
 import tactic
 import data.zmod.defs
 import data.zmod.basic
+import data.real.basic
+import data.vector.zip
 
 import init.meta.interactive
 
@@ -58,6 +60,57 @@ def il: f (inv a) a  = e :=  grp.inv_left a
 -- #check il
 instance q_add_group : Group := 
   ⟨ℚ , (+), rat.add_assoc, 0, rat.zero_add, rat.add_zero, rat.neg, rat.add_left_neg, add_right_rat⟩ 
+
+instance r_add_group : Group :=
+  ⟨ℝ , (+),add_assoc,(0:ℝ ),zero_add,add_zero,(λx,-x), add_left_neg,add_right_neg ⟩ 
+def zip_assoc (n: ℕ) (g: Group) :∀ (a b c : vector Group.T n), vector.zip_with Group.f (vector.zip_with Group.f a b) c = vector.zip_with Group.f a (vector.zip_with Group.f b c) :=
+begin
+intros a b c,
+induction n,
+{
+simp,
+-- sorry,
+},
+-- rw vector.zip_with,
+-- rw list.zip_with,
+-- rw vector,
+-- intros a b c,
+-- rw vector.zip_with,
+-- simp,
+-- rw list.zip_with,
+sorry,
+end
+def vec_left_id (n: ℕ ) (g:Group) : ∀ (a : vector Group.T n), vector.zip_with Group.f (vector.repeat Group.e n) a = a := 
+begin
+intro a,
+-- induction n,{
+--   simp,
+-- },
+induction a using vector.induction_on,
+{
+simp,
+},
+-- rw vector.zip_with,
+-- rw list.zip_with,
+-- simp,
+sorry,
+end
+def vec_right_id (n: ℕ ) (g:Group) : ∀ (a : vector Group.T n), vector.zip_with Group.f a (vector.repeat Group.e n) = a := 
+begin
+sorry,
+end
+def vec_inv (n: ℕ ) (g: Group) (x : vector  g.T n) : vector g.T n := vector.map (g.inv) x
+def vec_inv_left (n: ℕ ) (g: Group) : ∀ (a : vector Group.T n), vector.zip_with Group.f (vec_inv n g a) a = vector.repeat Group.e n := begin
+intro a,
+induction a using vector.induction_on, {
+  simp,
+},
+rw vec_inv,
+-- rw vector.map,
+sorry,
+end
+instance vec_group (n: ℕ ) (g: Group) : Group:=
+  ⟨vector g.T n, vector.zip_with g.f, zip_assoc n g ,vector.repeat g.e n,vec_left_id n g,vec_right_id n g,vec_inv n g,vec_inv_left n g,sorry⟩ 
 
 
 @[simp]
@@ -165,7 +218,14 @@ def symmetric_group (x: ℕ )  : Group :=
 
 
 def homomorphism (G: Group) (H:Group) (φ:G.T → H.T): Prop := ∀(x y : G.T), φ(G.f x y) = H.f (φ x) (φ y)
-
+class hom :=
+  (G: Group) 
+  (H:Group)
+  (φ:G.T → H.T)
+  (dist: ∀(x y : G.T), φ(G.f x y) = H.f (φ x) (φ y))
+class hom_param (G: Group) (H:Group)  :=
+  (φ:G.T → H.T)
+  (dist: ∀(x y : G.T), φ(G.f x y) = H.f (φ x) (φ y))
 def isomorphism (G: Group) (H:Group) (φ:G.T → H.T) : Prop := homomorphism G H φ ∧ function.bijective φ
 
 def homomorphic (G: Group) (H:Group) : Prop := ∃ (φ:G.T → H.T), homomorphism G H φ
@@ -175,3 +235,54 @@ rw homomorphic,
 
 sorry,
 end
+def proj_dist (n: ℕ ) (g: Group): 
+(∀ (x y : vector g.T n.succ),
+     ((λvec, vector.nth vec 0) (vector.zip_with g.f x y))
+     = g.f ((λvec, vector.nth vec 0) x) ((λvec, vector.nth vec 0) y)
+)
+:= begin
+intros x y,
+simp,
+end
+instance projection_homomorphism (g:Group) (n :ℕ ): hom  :=
+ ⟨vec_group n.succ g, g, λvec, vector.nth vec 0, proj_dist n g⟩
+
+class Group_Action := 
+  (G: Group)
+  (A: Type)
+  (f:  G.T → A → A)
+  (dist: ∀( g1 g2: G.T), ∀(a : A), f g1 (f g2 a) = f (G.f g1 g2) a)
+  (id: ∀ (a: A), f G.e a = a)
+
+instance trivial_action (G:Group) (A: Type): Group_Action :=
+  ⟨G,A, λx y, y,by simp, by simp⟩ 
+def autos (G: Group) : Type := hom_param G G
+
+-- def composition_is_auto
+def compose_autos (G: Group) (a: autos G) (b: autos G): autos G :=  begin
+rw autos at *,
+have c : ∀ (x y : Group.T),
+    ((a.φ ∘ b.φ) (Group.f x y)) =
+      Group.f ((a.φ ∘ b.φ) x) ((a.φ ∘ b.φ) y),{
+  intros x y,
+rw function.comp,
+
+simp,
+rw b.2,
+rw a.2,
+},
+exact ⟨function.comp a.1 b.1,  c⟩, 
+end
+def compose_autos_assoc (G:Group) : ∀ (a b c : autos G), compose_autos G (compose_autos G a b) c = compose_autos G a (compose_autos G b c) :=begin
+  intros a b c,
+  repeat{rw compose_autos},
+  refl,
+end
+def auto_id (G:Group) : autos G := begin
+rw autos,
+exact ⟨id, sorry⟩ 
+-- rw hom_param,
+sorry,
+end
+instance automorphisms (G: Group) : Group := 
+ ⟨ autos G,  compose_autos G, compose_autos_assoc G,auto_id G , sorry, sorry, sorry,sorry,sorry⟩ 
